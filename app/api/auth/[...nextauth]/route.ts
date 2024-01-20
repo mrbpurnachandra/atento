@@ -14,14 +14,16 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     jwt({ token, account }) {
       if (account) {
-        return { ...token, id_token: account.id_token };
+        token.idToken = account.id_token;
       }
 
       return token;
     },
 
     session({ session, token }) {
-      return { ...session, accessToken: token.id_token };
+      session.token = token.idToken;
+
+      return session;
     },
   },
 
