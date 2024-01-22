@@ -12,9 +12,28 @@ export const authOptions: NextAuthOptions = {
   },
 
   callbacks: {
-    jwt({ token, account }) {
+    async jwt({ token, account }) {
       if (account) {
         token.idToken = account.id_token;
+      }
+
+      // Check if the logged in oauth account has corresponding account in our service
+      if (!token.account) {
+        if (token.idToken) {
+          try {
+            const response = await fetch(process.env.ACCOUNT_SERVICE + "/me", {
+              headers: {
+                Authorization: "Bearer " + token.idToken,
+              },
+            });
+
+            if (response.ok) {
+              token.account = await response.json();
+            }
+          } catch (error) {
+            console.log(error);
+          }
+        }
       }
 
       return token;
@@ -22,6 +41,7 @@ export const authOptions: NextAuthOptions = {
 
     session({ session, token }) {
       session.token = token.idToken;
+      session.account = token.account;
 
       return session;
     },
